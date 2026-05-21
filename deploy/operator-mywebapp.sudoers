@@ -1,0 +1,4 @@
+Cmnd_Alias MYWEBAPP_SERVICE = /usr/bin/systemctl start mywebapp.service, /usr/bin/systemctl stop mywebapp.service, /usr/bin/systemctl restart mywebapp.service, /usr/bin/systemctl status mywebapp.service
+Cmnd_Alias MYWEBAPP_NGINX = /usr/bin/systemctl reload nginx.service
+
+operator ALL=(root) MYWEBAPP_SERVICE, MYWEBAPP_NGINX

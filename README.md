@@ -3,11 +3,9 @@
 
 Цей репозиторій містить реалізацію web-сервісу `mywebapp` для лабораторної роботи №1.
 
-## Варіант індивідуального завдання
+## Варіант індивідуального завдання 2 
 
 Для цього проєкту прийнято `N = 2`.
-
-Обчислення:
 
 - `V2 = (2 % 2) + 1 = 1`
 - `V3 = (2 % 3) + 1 = 3`
@@ -24,18 +22,14 @@
 
 `mywebapp` це простий сервіс обліку обладнання.
 
-Кожен запис інвентарю містить:
+Поля запису:
 
 - `id`
 - `name`
 - `quantity`
 - `created_at`
 
-## Архітектура системи
-
-Усі компоненти розгортаються на одній Linux VM.
-
-Схема роботи:
+## Архітектура
 
 `client -> nginx -> mywebapp -> MariaDB`
 
@@ -51,28 +45,13 @@
 - `/items`
 - `/items/<id>`
 
-Ендпоінти `/health/alive` і `/health/ready` використовуються для перевірки стану сервісу.
-
 ## Структура проєкту
 
 ```text
 lab1-mywebapp/
 ├─ mywebapp/
-│  ├─ __init__.py
-│  ├─ __main__.py
-│  ├─ application.py
-│  ├─ cli.py
-│  ├─ config.py
-│  ├─ database.py
-│  └─ server.py
 ├─ scripts/
-│  └─ migrate.py
 ├─ deploy/
-│  ├─ install.sh
-│  ├─ mywebapp.service
-│  ├─ mywebapp.socket
-│  ├─ nginx-mywebapp.conf
-│  └─ operator-mywebapp.sudoers
 ├─ tests/
 ├─ requirements.txt
 └─ README.md

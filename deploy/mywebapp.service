@@ -1,0 +1,21 @@
+[Unit]
+Description=mywebapp inventory service
+After=network.target mariadb.service
+
+[Service]
+Type=simple
+User=mywebapp
+Group=mywebapp
+WorkingDirectory=/opt/mywebapp/current
+EnvironmentFile=/etc/default/mywebapp
+ExecStartPre=/opt/mywebapp/venv/bin/python -m mywebapp migrate --host ${MYWEBAPP_HOST} --port ${MYWEBAPP_PORT} --db-host ${MYWEBAPP_DB_HOST} --db-port ${MYWEBAPP_DB_PORT} --db-name ${MYWEBAPP_DB_NAME} --db-user ${MYWEBAPP_DB_USER} --db-password ${MYWEBAPP_DB_PASSWORD}
+ExecStart=/opt/mywebapp/venv/bin/python -m mywebapp serve --host ${MYWEBAPP_HOST} --port ${MYWEBAPP_PORT} --listen-fd 3 --db-host ${MYWEBAPP_DB_HOST} --db-port ${MYWEBAPP_DB_PORT} --db-name ${MYWEBAPP_DB_NAME} --db-user ${MYWEBAPP_DB_USER} --db-password ${MYWEBAPP_DB_PASSWORD}
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
