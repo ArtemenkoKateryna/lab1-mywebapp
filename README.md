@@ -55,7 +55,7 @@ lab1-mywebapp/
 ├─ tests/
 ├─ requirements.txt
 └─ README.md
-##API
+## API
 Кореневий ендпоінт
 GET /
 приймає тільки text/html
