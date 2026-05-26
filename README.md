@@ -483,3 +483,135 @@ sudo systemctl stop mariadb.service
 ```
 
 Очікувано: команда має бути заборонена, оскільки `operator` не має права керувати MariaDB.
+## Docker Compose
+
+Для практичної частини лабораторної роботи №2 підготовлено контейнеризований запуск усіх сервісів системи з ЛР1.
+
+### Контейнеризована система складається з трьох сервісів:
+
+- `db` — MariaDB
+- `web` — застосунок `mywebapp`
+- `nginx` — reverse proxy
+
+### Архітектура контейнеризованої системи
+
+```text
+client -> nginx -> mywebapp -> MariaDB
+```
+
+## Додані файли для контейнеризації
+
+- `Dockerfile`
+- `.dockerignore`
+- `docker-compose.yml`
+- `docker/web-entrypoint.sh`
+- `deploy/nginx-mywebapp.docker.conf`
+
+## Особливості контейнерного запуску
+
+- усі сервіси запускаються в окремій Docker-мережі `mywebapp_net`
+- дані бази даних зберігаються у named volume `mywebapp_db_data`
+- назовні публікується тільки `nginx` на порту `80`
+- `web` і `db` доступні лише всередині Docker-мережі
+- перед запуском застосунку автоматично виконується міграція бази даних
+- health endpoints не публікуються через `nginx`
+
+## Запуск через Docker Compose
+
+З кореня репозиторію:
+
+```bash
+docker compose up --build -d
+```
+
+Перевірка стану контейнерів:
+
+```bash
+docker compose ps
+```
+
+## Перевірка роботи системи
+
+### Головна сторінка
+
+```bash
+curl -H 'Accept: text/html' http://127.0.0.1/
+```
+
+### Список предметів
+
+```bash
+curl -H 'Accept: application/json' http://127.0.0.1/items
+```
+
+### Створення нового запису
+
+```bash
+curl -X POST http://127.0.0.1/items \
+-H 'Accept: application/json' \
+-H 'Content-Type: application/json' \
+-d '{"name":"Docker item","quantity":5}'
+```
+
+### Перевірка конкретного запису
+
+```bash
+curl -H 'Accept: application/json' http://127.0.0.1/items/1
+```
+
+### Перевірка блокування health endpoint
+
+```bash
+curl http://127.0.0.1/health/alive
+```
+
+Очікуваний результат:
+
+```text
+404 Not Found
+```
+
+## Перевірка мережі та volume
+
+### Перевірка Docker-мережі
+
+```bash
+docker network inspect mywebapp_net
+```
+
+### Перевірка volume
+
+```bash
+docker volume inspect mywebapp_db_data
+```
+
+### Перевірка опублікованих контейнерів
+
+```bash
+docker ps
+```
+
+## Перевірка збереження даних
+
+Після створення тестових записів:
+
+```bash
+docker compose down
+docker compose up -d
+
+curl -H 'Accept: application/json' http://127.0.0.1/items
+```
+
+Якщо записи залишаються після повторного запуску, це означає, що дані коректно зберігаються у volume `mywebapp_db_data`.
+
+## Зупинка контейнерів
+
+```bash
+docker compose down
+```
+
+Якщо потрібно видалити контейнер разом із volume:
+
+```bash
+docker compose down -v
+```
