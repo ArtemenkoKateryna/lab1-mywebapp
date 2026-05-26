@@ -1,0 +1,88 @@
+services:
+  db:
+    image: mariadb:11.4
+    container_name: mywebapp-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: mywebapp
+      MARIADB_USER: mywebapp
+      MARIADB_PASSWORD: mywebapp-secret
+      MARIADB_ROOT_PASSWORD: root-secret
+    volumes:
+      - mywebapp_db_data:/var/lib/mysql
+    networks:
+      - mywebapp_net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mariadb-admin ping -h 127.0.0.1 -u$$MARIADB_USER -p$$MARIADB_PASSWORD --silent",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mywebapp-web
+    restart: unless-stopped
+    environment:
+      MYWEBAPP_HOST: 0.0.0.0
+      MYWEBAPP_PORT: 3000
+      MYWEBAPP_DB_HOST: db
+      MYWEBAPP_DB_PORT: 3306
+      MYWEBAPP_DB_NAME: mywebapp
+      MYWEBAPP_DB_USER: mywebapp
+      MYWEBAPP_DB_PASSWORD: mywebapp-secret
+      MYWEBAPP_DB_CONNECT_TIMEOUT: 5
+      MYWEBAPP_DB_WAIT_ATTEMPTS: 30
+      MYWEBAPP_DB_WAIT_INTERVAL: 2
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mywebapp_net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/health/ready', timeout=5).read()",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: mywebapp-nginx
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx-mywebapp.docker.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - mywebapp_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  mywebapp_db_data:
+    name: mywebapp_db_data
+
+networks:
+  mywebapp_net:
+    name: mywebapp_net
+    driver: bridge
